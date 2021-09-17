@@ -15,7 +15,7 @@ import latex_table
 parser = argparse.ArgumentParser()
 parser.add_argument("-r", "--results", help="Path to save results", type=str, required=False, default="results")
 parser.add_argument("-o", "--orig", help="Path to original distribution", required=True)
-parser.add_argument("-s", "--alternative", help="Path list to alternative distributions", required=True, nargs="+")
+parser.add_argument("-s", "--generator_list", help="Path list to generator distributions", required=True, nargs="+")
 parser.add_argument("-l", "--light", help="Light execution (if you have low memory issues)", action="store_true", required=False)
 
 args = parser.parse_args()
@@ -32,7 +32,7 @@ def check_valid(path):
 if not check_valid(args.orig):
     raise ValueError(f"{args.orig} is not a valid directory")
 
-for dir in args.alternative:
+for dir in args.generator_list:
     if not check_valid(dir):
         raise ValueError(f"{dir} is not a valid directory")
 
@@ -240,7 +240,7 @@ def hypotesis_test(groups_sizes, clust_values):
     group_sizes_orig = groups_sizes[orig_family_name]
     clust_values_orig = clust_values[orig_family_name]
 
-    for dist in args.alternative:
+    for dist in args.generator_list:
         family_name = dist.strip(os.path.sep).split(os.path.sep)[-1]
 
         group_sizes_gen = groups_sizes[family_name]
@@ -332,7 +332,7 @@ df_solvers = []
 groups_sizes = {}
 clust_values = {}
 alt_names = []
-for dir_path in [args.orig] + args.alternative:
+for dir_path in [args.orig] + args.generator_list:
     family_name = dir_path.strip(os.path.sep).split(os.path.sep)[-1]
     if dir_path != args.orig:
         alt_names.append(family_name)
