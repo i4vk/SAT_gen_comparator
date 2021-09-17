@@ -1,0 +1,121 @@
+Graph Features Computation for SAT instances.
+Version 2.2
+Authors:
+  - Carlos Ansótegui	(DIEI - UdL)
+  - María Luisa Bonet	(LSI - UPC)
+  - Jesús Giráldez-Cru	(IIIA-CSIC)
+  - Jordi Levy			(IIIA-CSIC)
+
+Contact: jgiraldez@iiia.csic.es
+
+Copyright (C) 2014  C. Ansótegui, M.L. Bonet, J. Giráldez-Cru, J. Levy
+
+**************************************************************************************************************************
+
+DESCRIPTION:
+
+This tool analyzes some graph features of SAT instances in CNF form, written following the
+DIMACS format.
+
+Initially, SAT instances are transformed into graphs, following two models:
+- Bi-partite graphs (CVIG model): where nodes are variables or clauses, and an edge between a variable and
+  a clause means that this variable occurs in the clause.
+- Weighted graphs (VIG model): where nodes are variables and an edge between two variables means that they
+  occur together in a clause. The weigth is calculated as w_{i,j} = \sum_{i,j\in C} 1/(|C| choose 2)
+  
+Then, some graph features are computed:
+ - Scale-free structure (alpha exponent) 	  [1].
+ - Community structure (modularity) 		  [2].
+ - Self-similar structure (fractal dimension) [3].
+ 
+For further details:
+[1] C. Ansótegui, M.L. Bonet, J. Levy. On the Structure of Industrial SAT Instances. CP 2009: 127-141.
+[2] C. Ansótegui, J. Giráldez-Cru, J. Levy. The Community Structure of SAT Formulas. SAT 2012: 410-423.
+[3] C. Ansótegui, M.L. Bonet, J. Giráldez-Cru, J. Levy. The Fractal Dimension of SAT Formulas. IJCAR 2014: 107-121.
+
+**************************************************************************************************************************
+
+COMPILATION:
+
+~$ make all
+
+**************************************************************************************************************************
+
+EXECUTION:
+
+----------------------------
+*** General ***
+It generates a CSV format list of features (in stdout or in a output CSV file).
+~$ features_s <instance.cnf>
+or:
+~$ features_s -j <out.csv> <instance.cnf>
+
+In very large intances, this implementation (based on a "set" data structure) can cause some RAM problems. For those instances, we recommend instead to use a light RAM consuming implementation (based on a "vector" data structure):
+~$ features_v <instance.cnf>
+
+----------------------------
+*** Modes ***
+
+In general, this tools computes 6 structure features: scale-free structure for variable occurrences and clause sizes, community structure for VIG and CVIG, and self-similar structure for VIG and CVIG.
+You can compute only one (or many) of them selecting its (or them) corresponding mode(s):
+Option "-1" for scale-free of variable occurrences.
+Option "-2" for scale-free of clause sizes.
+Option "-3" for self-similar structure for VIG.
+Option "-4" for self-similar structure for CVIG.
+Option "-5" for community structure for VIG.
+Option "-6" for community structure for CVIG.
+
+
+Example:
+~$ features_s -1 -3 <instance.cnf>
+only computes the scale-free struct. of variable occurrences and the self-similar struct. for VIG.
+
+----------------------------
+*** Output files ***
+
+Some extra auxiliary files are required to plot results or just to save some temporary data.
+Option "-a" generates all of them.
+
+Example:
+~$ features_s -a <instance.cnf>
+generates a total of 18 files in the same directory of <instance.cnf>, appending to it a particular suffix.
+
+!!! Output files and modes:
+If some mode is activated, only associated files to this mode will be generated (even if you explicitely give a name to a file non-associated with the modes selected, it will not be created).
+
+Example:
+~$ features_s -a -1 -5 <instance.cnf>
+only creates files "alphavar", "alphavar.out", "alphavar.int", "alphavar.plt", "mod.out", "mod.modules" and "csv"
+-> Notice that this CSV file contains features with value 0 or -1 for those features that were not computed.
+
+----------------------------
+*** Extra Options ****
+
+See also:
+~$ features_s -h
+
+
+----------------------------
+*** Extra Software ***
+
+~$ mostlikely -f <instance.cnf.alphavar>
+computes the alpha exponent of a list of points (used in [1]).
+Examples:
+~$ mostlikely -f <instance.cnf.alphavar> -m 10 -p <file-plt> -i <file-int> (generates plots for variable occurrences)
+~$ mostlikely -f <instance.cnf.alphavar> -m 10 -p <file-plt> -i <file-int> -c (generates plots for clause sizes)
+
+~$ modmodules -m <instance.cnf.mod.modules> <instance.cnf>
+computes the modularity for a given partition in file <instance.cnf.mod.modules> (used in [2]).
+
+~$ regression -f <instance.cnf.dim>
+computes the linear regression of a list of points (used in [3]).
+Example:
+~$ regression -f <instance.cnf.dim> -p <file-plt> -m 1 -M 6
+
+
+See also:
+~$ mostlikely -h
+~$ modmodules -h
+~$ regression -h
+
+**************************************************************************************************************************
