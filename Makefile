@@ -48,7 +48,7 @@ clean: permission
 	cd $(GLUCOSE_DIR) && $(MAKE) clean
 	cd $(MAPLESAT_DIR) && export MROOT=../ && $(MAKE) clean
 	cd $(LINGELING_DIR) && ./configure.sh && $(MAKE) clean
-	cd $(MAPLE_LCM_CHRONO)/sources/simp && $(MAKE) clean
+	cd $(MAPLE_LCM_CHRONO)/sources/simp && $(MAKE) clean && cd ../.. && rm bin/MapleLCMDistChrBt-DL-v3
 	cd $(GRAPH_FEATURES_DIR) && $(MAKE) clean
 
 
