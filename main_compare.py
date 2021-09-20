@@ -58,7 +58,7 @@ def extract_mod(VIGs, family_name, df_result, df_per_formula):
                 group_sizes = np.concatenate([group_sizes, gs], axis=0)
     elif type(VIGs) == list:
         for i, path in enumerate(VIGs):
-            VIG_i = modularity.sat_to_VIG_mod(path)
+            VIG_i = modularity.sat_to_VIG(path)
             _, form = os.path.split(path)
             mod_VIG, num_parts, gs, fig = modularity.get_modularity(VIG_i)
             mods[form] = mod_VIG
@@ -122,7 +122,7 @@ def extract_clust(VIGs, family_name, df_result, df_per_formula):
             plt.close(fig[0])
     elif type(VIGs) == list:
         for i, path in enumerate(VIGs):
-            VIG_i = modularity.sat_to_VIG_mod(path)
+            VIG_i = modularity.sat_to_VIG(path)
             clust, clust_v, fig = clustering.get_clustering(VIG_i)
             _, form = os.path.split(path)
             clusts[form] = clust
@@ -340,7 +340,7 @@ for dir_path in [args.orig] + args.generator_list:
         orig_name = family_name
 
     if not args.light:
-        VIGs = {path: modularity.sat_to_VIG_mod(os.path.join(dir_path, path)) for path in os.listdir(dir_path) if path[-4:] == ".cnf"}
+        VIGs = {path: modularity.sat_to_VIG(os.path.join(dir_path, path)) for path in os.listdir(dir_path) if path[-4:] == ".cnf"}
     else:
         VIGs = [os.path.join(dir_path, path) for path in os.listdir(dir_path) if path[-4:] == ".cnf"]
 

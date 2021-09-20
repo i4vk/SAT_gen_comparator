@@ -80,6 +80,8 @@ def degree_dist(source, result_path):
             if cnf[-4:] == ".cnf":
                 result = subprocess.run([f'GraphFeatures/features_s -1 -t {os.path.join(source, cnf+".alphavar")} -l {os.path.join(source, cnf+".alphavar.out")} \
                  -k {os.path.join(source, cnf+".alphavar.int")} -g {os.path.join(source, cnf+".alphavar.plt")} {os.path.join(source, cnf)}'], shell=True, capture_output=True)
+
+                # print(result)
                  
                 if result.returncode != 0:
                     raise RuntimeError(f"Error extracting degree distribution features of {os.path.join(source,cnf)} file")

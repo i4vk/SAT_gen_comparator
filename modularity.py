@@ -44,62 +44,6 @@ def preprocess_VIG(formula, VIG):
     """
     Builds VIG.
     """
-    for cn in range(len(formula)):
-        if len(formula[cn]) != 1:
-            weight_vig = 2.0 / (len(formula[cn]) * (len(formula[cn])-1) )
-            for i in range(len(formula[cn])-1):
-                for j in range(len(formula[cn]))[i+1:]:
-                    if VIG.has_edge(abs(formula[cn][i]), abs(formula[cn][j])):
-                        weight_edge = VIG.get_edge_data(abs(formula[cn][i]), abs(formula[cn][j]))['weight']
-                        w = weight_edge + weight_vig
-                        VIG.add_edge(abs(formula[cn][i]), abs(formula[cn][j]), weight=w)
-                    else:
-                        VIG.add_edge(abs(formula[cn][i]), abs(formula[cn][j]), weight=weight_vig)
-
-def preprocess_VIG_multigraph(formula, VIG):
-    """
-    Builds VIG.
-    """
-    import itertools
-    for cn in range(len(formula)):
-        if len(formula[cn]) != 1:
-            weight_vig = 2.0 / (len(formula[cn]) * (len(formula[cn])-1) )
-            for comb in itertools.combinations(formula[cn], 2):
-                i, j = comb
-                VIG.add_edge(abs(i), abs(j), weight=weight_vig)
-
-    postproc_VIG = nx.Graph()
-    # for u,v,data in VIG.edges(data=True):
-    #     w = data['weight'] if 'weight' in data else 1.0
-    #     if postproc_VIG.has_edge(u,v):
-    #         postproc_VIG[u][v]['weight'] += w
-    #     else:
-    #         postproc_VIG.add_edge(u, v, weight=w)
-    postproc_VIG.add_nodes_from(VIG.nodes())
-    for n in VIG.nodes():
-        neigh = [v for v in VIG[n] if v > n]
-
-        for v in neigh:
-            w = 0
-            for i in VIG[n][v]:
-                w += VIG[n][v][i]["weight"]
-
-            postproc_VIG.add_edge(n,v, weight=w)
-
-    return postproc_VIG
-
-    
-                # if VIG.has_edge(abs(i), abs(j)):
-                #     weight_edge = VIG.get_edge_data(abs(i), abs(j))['weight']
-                #     w = weight_edge + weight_vig
-                #     VIG.add_edge(abs(i), abs(j), weight=w)
-                # else:
-                #     VIG.add_edge(abs(i), abs(j), weight=weight_vig)
-
-def preprocess_VIG_modified(formula, VIG):
-    """
-    Builds VIG.
-    """
     import itertools
     for cn in range(len(formula)):
         if len(formula[cn]) != 1:
@@ -156,7 +100,6 @@ def get_modularity(VIG):
 
     return mod_VIG, num_parts, group_sizes, (fig, ax)
 
-# Takes in an dimacs file, convert it to a nx graph representation of the variable incidence graph
 def sat_to_VIG(source):
     print(f"Reading {source}")
     cnf = open(source)
@@ -177,28 +120,6 @@ def sat_to_VIG(source):
     VIG = nx.Graph()
     VIG.add_nodes_from(range(num_vars + 1)[1:])
     preprocess_VIG(formula, VIG) # Build a LIG
-    return VIG
-
-def sat_to_VIG_mod(source):
-    print(f"Reading {source}")
-    cnf = open(source)
-    content = cnf.readlines()
-    while content[0].split()[0] == 'c':
-        content = content[1:]
-    while len(content[-1].split()) <= 1:
-        content = content[:-1]
-
-    # Paramters
-    parameters = content[0].split()
-    formula = content[1:]
-    formula = to_int_matrix(formula)
-    num_vars = int(parameters[2])
-    num_clause = int(parameters[3])
-    #print (num_vars)
-
-    VIG = nx.Graph()
-    VIG.add_nodes_from(range(num_vars + 1)[1:])
-    preprocess_VIG_modified(formula, VIG) # Build a LIG
     return VIG
 
 def create_VIG(path):
@@ -257,37 +178,7 @@ def create_VIG_modified(path):
     VIG = nx.Graph()
     VIG.add_nodes_from(range(num_vars+1)[1:])
 
-    preprocess_VIG_modified(formula, VIG) # Build a VIG
-
-    return VIG
-
-def create_VIG_multigraph(path):
-    print(f"Reading {path}")
-    cnf = open(path)
-    content = cnf.readlines()
-    cnf.close()
-
-    while content[0].split()[0] == 'c':
-        content = content[1:]
-    while len(content[-1].split()) <= 1:
-        content = content[:-1]
-
-
-    parameters = content[0].split()
-    formula = content[1:]
-    formula = to_int_matrix(formula)
-    (formula, num_clauses) = remove_duplicate(formula)
-
-    num_vars = int(parameters[2])
-
-    assert (get_vacuous(formula) == 0)
-    assert(num_vars != 0)
-    assert(num_clauses == len(formula))
-
-    VIG = nx.MultiGraph()
-    VIG.add_nodes_from(range(num_vars+1)[1:])
-
-    VIG = preprocess_VIG_multigraph(formula, VIG) # Build a VIG
+    preprocess_VIG(formula, VIG) # Build a VIG
 
     return VIG
 

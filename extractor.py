@@ -88,7 +88,7 @@ if args.mod or args.clus or args.all:
         # exit()
     else:
         print(f"Working on family \'{family_name}\'")
-        VIGs = {path: modularity.sat_to_VIG_mod(os.path.join(args.path, path)) for path in os.listdir(args.path) if path[-4:] == ".cnf"}
+        VIGs = {path: modularity.sat_to_VIG(os.path.join(args.path, path)) for path in os.listdir(args.path) if path[-4:] == ".cnf"}
 
 
 if args.mod or args.all:
