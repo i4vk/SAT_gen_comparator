@@ -213,6 +213,10 @@ if args.clus or args.all:
         plt.close(fig[0])
 
 
+if args.all or args.clus or args.mod:
+    del VIGs
+
+
 if args.scale_free or args.all:
     alpha, kmin, error, k_err = degree_dist.degree_dist(args.path, args.results)
     df_extracted_values["powerlaw-alpha"] = [alpha]
@@ -230,10 +234,9 @@ if args.clus or args.mod or args.scale_free or args.all:
         df_extracted_values.to_csv(os.path.join(args.results, f"results_{formula_name}.csv"), index=False)
 
 
-
 if args.solvers or args.all:
     solver_list = [solvers.Glucose(), solvers.MapleLCM(), solvers.MapleSAT(), solvers.Lingeling(), solvers.Cadical()]
-    time_limit = 500
+    time_limit = 1000
     max_retries=3
 
     if family:

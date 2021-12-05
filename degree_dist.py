@@ -10,7 +10,7 @@ def clear_auxfiles(source_dir, max_retries = 5):
         raise ValueError("Source must be a directory")
 
     for f in os.listdir(source_dir):
-        if f[-4:] != ".cnf" and f[-4:] != ".png":
+        if f[-4:] != ".cnf":
             for rt in range(max_retries):
                 try:
                     os.remove(os.path.join(source_dir,f))
@@ -21,6 +21,77 @@ def clear_auxfiles(source_dir, max_retries = 5):
                     else:
                         raise e
                 break
+
+def join_plots(plots, results_path, filename):
+    import re
+
+    out_path = os.path.join(results_path, filename)
+
+    count = 0
+    new_plot = []
+    for family_name in plots.keys():
+        print(family_name)
+
+        if count == 0:
+            for line in plots[family_name]:
+                if "set output" in line:
+                    new_plot.append(f'set output "{out_path}"\n')
+                    continue
+                if line[:4] == "plot":
+                    line_aux = re.sub(r'plot "(\/.*?\/)((?:[^\/]|\\\/)+?)(?:(?<!\\)\s|$)', f'plot "{os.path.join(results_path, f"{family_name}-scale_free.int")}" ', line)
+                    line_aux = re.sub(r'ti "\w*" ', f'ti "{family_name}" ', line_aux)
+                    line_aux = re.sub(r'lt \d', f"lt {count+1}", line_aux)
+                    line_aux = line_aux.replace('/Symbol a}', "/Symbol a}_{"+family_name+"}")
+                    line_aux = line_aux.replace("\n", ", \\\n")
+
+                    new_plot.append(line_aux)
+                    # line_split = line.split(" ")
+                    # pt = 
+                    # line_aux = f'plot {os.path.join(results_path, f"{family_name}-scale_free.int")} ti "{family_name}" lt {count+1} '
+                    break
+                new_plot.append(line)
+        else:
+            for line in plots[family_name]:
+                if line[:4] == "plot":
+                    line_aux = re.sub(r'plot "(\/.*?\/)((?:[^\/]|\\\/)+?)(?:(?<!\\)\s|$)', f'\t"{os.path.join(results_path, f"{family_name}-scale_free.int")}" ', line)
+                    line_aux = re.sub(r'ti "\w*" ', f'ti "{family_name}" ', line_aux)
+                    line_aux = re.sub(r'lt \d', f"lt {count+1}", line_aux)
+                    line_aux = line_aux.replace('/Symbol a}', "/Symbol a}_{"+family_name+"}")
+
+                    if count < len(plots.keys())-1:
+                        line_aux = line_aux.replace("\n", ", \\\n")
+                    # line_split = line.split(" ")
+                    # pt = 
+                    # line_aux = f'plot {os.path.join(results_path, f"{family_name}-scale_free.int")} ti "{family_name}" lt {count+1} '
+                    new_plot.append(line_aux)
+                    break
+
+        count += 1
+
+    new_plot.append("quit\n")
+    with open(f"{out_path[:-4]}.plt", "w") as out_f:
+        out_f.writelines(new_plot)
+
+    result_plot = subprocess.run(["gnuplot", f"{out_path[:-4]}.plt"])
+    if result_plot.returncode != 0:
+        raise RuntimeError("Error plotting degree distribution")
+
+    max_retries = 5
+    for f in os.listdir(results_path):
+        if f[-4:] == ".int" or f[-4:] == ".plt":
+            for rt in range(max_retries):
+                try:
+                    os.remove(os.path.join(results_path,f))
+                except PermissionError as e:
+                    if rt <= max_retries - 1:
+                        time.sleep(0.5)
+                        continue
+                    else:
+                        raise e
+                break
+
+
+
 
 def degree_dist(source, result_path):
     if os.path.isdir(source):
@@ -119,7 +190,9 @@ def degree_dist(source, result_path):
                 # result_plt = subprocess.run(["gnuplot", f"{os.path.join(source, cnf)}.alphavar.plt"])
 
     if family:
-        shutil.move(os.path.join(dir_path, "kk.png"), os.path.join(result_path, f"{family_name}-scale_free.png"))
+        # shutil.move(os.path.join(dir_path, "kk.png"), os.path.join(result_path, f"{family_name}-scale_free.png"))
+        shutil.move(os.path.join(dir_path, "kk.plt"), os.path.join(result_path, f"{family_name}-scale_free.plt"))
+        shutil.move(os.path.join(dir_path, "kk.int"), os.path.join(result_path, f"{family_name}-scale_free.int"))
     else:
         shutil.move(os.path.join(dir_path, f"{formula_name}.alphavar.png"), os.path.join(result_path, f"{formula_name}-scale_free.png"))
     clear_auxfiles(dir_path)
