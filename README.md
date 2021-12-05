@@ -14,6 +14,7 @@ Now you are ready to use the framework. The main script its called *main_compare
 * **-o**: Path to original formulas (family directory).
 * **-s**: List of paths where the generated formulas are stored. One directory for each generator you want to compare.
 * **-l**: When you are working with big formulas, it can cause memory issues in your computer. In order to prevent that, you can use this option to make a low memory consuming execution (slower than the original, but less memory will be used).
+* **--only_vig_features**: Use this flag if you want to skip solvers execution.
 
 You can use this script like this:
 
