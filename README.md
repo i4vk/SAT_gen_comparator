@@ -18,4 +18,4 @@ Now you are ready to use the framework. The main script its called *main_compare
 
 You can use this script like this:
 
-    $ python main_compare.py -o <family_path> -s <generator_paths_list> -r <results_path> [-l]
+    $ python main_compare.py -o <family_path> -s <generator_paths_list> -r <results_path> [-l] [--only_vig_features]
