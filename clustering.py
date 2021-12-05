@@ -64,7 +64,7 @@ def preprocess_VIG(formula, VIG):
                         VIG.add_edge(abs(formula[cn][i]), abs(formula[cn][j]), weight=weight_vig)
 
 def get_clustering(VIG):
-    clust_nodes = nx.clustering(VIG, weight="weight")
+    clust_nodes = nx.clustering(VIG, weight=None)
 
     clust_values = np.array(list(clust_nodes.values()))
     clust_mean = np.mean(clust_values)

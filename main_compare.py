@@ -1,4 +1,6 @@
 import argparse
+
+from scipy.stats.stats import kendalltau
 import modularity
 import degree_dist
 import solvers
@@ -17,6 +19,7 @@ parser.add_argument("-r", "--results", help="Path to save results", type=str, re
 parser.add_argument("-o", "--orig", help="Path to original distribution", required=True)
 parser.add_argument("-s", "--generator_list", help="Path list to generator distributions", required=True, nargs="+")
 parser.add_argument("-l", "--light", help="Light execution (if you have low memory issues)", action="store_true", required=False)
+parser.add_argument("--only_vig_features", help="Exclude solvers from execution", action="store_true", required=False)
 
 args = parser.parse_args()
 
@@ -175,7 +178,7 @@ def extract_scale_free(path, df_result):
 
 def extract_solvers(path, df_per_formula):
     solver_list = [solvers.Glucose(), solvers.MapleLCM(), solvers.MapleSAT(), solvers.Lingeling(), solvers.Cadical()]
-    time_limit = 500
+    time_limit = 1500
     max_retries=3
     
     dfs = {}
@@ -215,7 +218,9 @@ def extract_solvers(path, df_per_formula):
 
 
     merged_df = pd.concat(dfs.values(), axis=0)
-    # merged_df.to_csv(os.path.join(args.results, f"solvers_per_formula.csv"), index=False)
+    print(merged_df)
+    merged_df.to_csv(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv"), index=False)
+    result_sat_unsat = merged_df["Result"]
     type_result = pd.CategoricalDtype(categories=["SAT", "UNSAT", "INDET"])
     merged_df.Result = merged_df.Result.astype(type_result)
     merged_df = pd.get_dummies(merged_df, columns=["Result"], prefix=["#"])
@@ -226,8 +231,29 @@ def extract_solvers(path, df_per_formula):
     df_per_formula = df_per_formula.set_index("Formula", drop=False).join(solvers_per_form_df)
     del solvers_per_form_df
 
+    def sat_unsat(row):
+        if row["#_SAT"] > 0:
+            return "SAT"
+        elif row["#_UNSAT"] > 0:
+            return "UNSAT"
+        else:
+            return "INDET"
+
+    def search_sat_unsat(row, df_per_formula):
+        type_form = df_per_formula.query("Formula == @row.Formula")["Type_formula"].values[0]
+        return type_form
+
+
+    df_per_formula["Type_formula"] = df_per_formula.apply(sat_unsat, axis=1)
+    merged_df["Type_formula"] = merged_df.apply(search_sat_unsat, args=(df_per_formula,), axis=1)
+    merged_df_type = merged_df.groupby(by=["Solver", "Type_formula"]).agg({"CPU_time": 'sum', "#_SAT":"sum", "#_UNSAT":"sum", "#_INDET":"sum"}).sort_values(by="CPU_time")
+
     merged_df = merged_df.groupby(by="Solver").agg({"CPU_time": 'sum', "#_SAT":"sum", "#_UNSAT":"sum", "#_INDET":"sum"}).sort_values(by="CPU_time")
-    # merged_df.to_csv(os.path.join(args.results, f"result_solvers.csv"))
+
+    sat_times = merged_df_type.query("Type_formula == 'SAT'")
+    unsat_times = merged_df_type.query("Type_formula == 'UNSAT'")
+    merged_df = merged_df.merge(sat_times[["CPU_time"]], on="Solver", how="left", suffixes=("", "_SAT"))
+    merged_df = merged_df.merge(unsat_times[["CPU_time"]], on="Solver", how="left", suffixes=("", "_UNSAT"))
 
     return merged_df, df_per_formula
 
@@ -264,13 +290,12 @@ def analytical_comparison(df_results):
         f.write(table_powerlaw)
 
 def solvers_comparison(df_results, df_solvers):
-    def get_distance_rankings(r1, r2):
-        return np.sum(np.abs(np.array(r1)-np.array(r2)))
-
     analytical_df = pd.concat(df_results).reset_index(drop=True)
 
     df_solvers_orig = df_solvers[0]
     df_solvers_orig["ranking"] = df_solvers_orig["CPU_time"].rank(method="first")
+    df_solvers_orig["ranking_SAT"] = df_solvers_orig["CPU_time_SAT"].rank(method="first")
+    df_solvers_orig["ranking_UNSAT"] = df_solvers_orig["CPU_time_UNSAT"].rank(method="first")
 
     total_formulas_orig = df_solvers_orig.iloc[0]["#_SAT"] + df_solvers_orig.iloc[0]["#_UNSAT"] + df_solvers_orig.iloc[0]["#_INDET"]
     df_solvers_orig["%_SAT"] = df_solvers_orig["#_SAT"] / total_formulas_orig * 100
@@ -280,7 +305,11 @@ def solvers_comparison(df_results, df_solvers):
     df_solvers_orig.to_csv(os.path.join(args.results, f'{list(analytical_df["Family name"])[0]}_solvers.csv'))
     # print(df_solvers_orig)
 
-    dist_ranking = [0]
+    kendall_results = [1]
+    kendall_results_sat = [1]
+    kendall_results_unsat = [1]
+    kendall_sat_pvalue = [0]
+    kendall_unsat_pvalue = [0]
     mean_sat = [np.mean(np.array(df_solvers_orig["%_SAT"]))]
     mean_unsat = [np.mean(np.array(df_solvers_orig["%_UNSAT"]))]
     mean_indet = [np.mean(np.array(df_solvers_orig["%_INDET"]))]
@@ -290,6 +319,8 @@ def solvers_comparison(df_results, df_solvers):
     # for dist in args.paths:
         df_solvers_gen = df_solvers[dist]
         df_solvers_gen["ranking"] = df_solvers_gen["CPU_time"].rank(method="first")
+        df_solvers_gen["ranking_SAT"] = df_solvers_gen["CPU_time_SAT"].rank(method="first")
+        df_solvers_gen["ranking_UNSAT"] = df_solvers_gen["CPU_time_UNSAT"].rank(method="first")
         total_formulas_gen = df_solvers_gen.iloc[0]["#_SAT"] + df_solvers_gen.iloc[0]["#_UNSAT"] + df_solvers_gen.iloc[0]["#_INDET"]
         df_solvers_gen["%_SAT"] = df_solvers_gen["#_SAT"] / total_formulas_gen * 100
         df_solvers_gen["%_UNSAT"] = df_solvers_gen["#_UNSAT"] / total_formulas_gen * 100
@@ -302,14 +333,36 @@ def solvers_comparison(df_results, df_solvers):
         df_solvers_gen = df_solvers_gen.sort_values(by="Solver")
         df_solvers_gen.to_csv(os.path.join(args.results, f'{list(analytical_df["Family name"])[dist]}_solvers.csv'))
 
-        dist_ranking.append(get_distance_rankings(df_solvers_orig["ranking"], df_solvers_gen["ranking"]))
+        kendall_sat = kendalltau(df_solvers_orig["ranking_SAT"], df_solvers_gen["ranking_SAT"])
+        kendall_unsat = kendalltau(df_solvers_orig["ranking_UNSAT"], df_solvers_gen["ranking_UNSAT"])
+
+        print(df_solvers_orig["ranking_SAT"])
+        print(df_solvers_gen["ranking_SAT"])
+
+        # kendall_results.append(kendalltau(df_solvers_orig["ranking"], df_solvers_gen["ranking"]).correlation)
+        kendall_results_sat.append(kendall_sat.correlation)
+        kendall_sat_pvalue.append(kendall_sat.pvalue)
+        kendall_results_unsat.append(kendall_unsat.correlation)
+        kendall_unsat_pvalue.append(kendall_unsat.pvalue)
+
+        print(kendall_sat_pvalue)
+        print(kendall_unsat_pvalue)
 
 
-    solver_comp = pd.DataFrame({"Family name":list(analytical_df["Family name"]), "Rank dist":dist_ranking,
+    # solver_comp = pd.DataFrame({"Family name":list(analytical_df["Family name"]), "Kendall Coefficient":kendall_results,
+    #                             "Kendall Coefficient (SAT)":kendall_results_sat, "Kendall Coefficient (UNSAT)":kendall_results_unsat,
+    #                             "%_SAT (mean)": mean_sat, "%_UNSAT (mean)": mean_unsat, "%_TIMEOUT (mean)": mean_indet,
+    #                             "CPU time (mean)":mean_cpu_time})
+
+    solver_comp = pd.DataFrame({"Family name":list(analytical_df["Family name"]),
+                                "Kendall Coeff. (SAT)":kendall_results_sat, "p-value (SAT)":kendall_sat_pvalue,
+                                "Kendall Coeff. (UNSAT)":kendall_results_unsat, "p-value (UNSAT)":kendall_unsat_pvalue,
                                 "%_SAT (mean)": mean_sat, "%_UNSAT (mean)": mean_unsat, "%_TIMEOUT (mean)": mean_indet,
                                 "CPU time (mean)":mean_cpu_time})
 
     print(solver_comp)
+
+    solver_comp.to_excel(os.path.join(args.results, "solvers_table.xlsx"), index=False)
 
     # def highlight_min(s):
         
@@ -323,6 +376,7 @@ def solvers_comparison(df_results, df_solvers):
     table = latex_table.solvers_table(solver_comp)
 
     with open(os.path.join(args.results, "solvers_table.tex"), "w") as f:
+        print(table)
         f.write(table)
 
 
@@ -368,15 +422,34 @@ for dir_path in [args.orig] + args.generator_list:
 
     df_extracted_values = extract_scale_free(dir_path, df_extracted_values)
 
-    df_solvers_i, df_per_formula = extract_solvers(dir_path, df_per_formula)
+    if not args.only_vig_features:
+        df_solvers_i, df_per_formula = extract_solvers(dir_path, df_per_formula)
 
     df_results.append(df_extracted_values)
     df_per_formula_joined.append(df_per_formula)
-    df_solvers.append(df_solvers_i)
+    if not args.only_vig_features:
+        df_solvers.append(df_solvers_i)
+        print(df_solvers)
     groups_sizes[family_name] = groups_sizes_df
     clust_values[family_name] = clust_values_df
 
 
-hypotesis_test(groups_sizes, clust_values)
+plots = {}
+for dir_path in [args.orig] + args.generator_list:
+    family_name = dir_path.strip(os.path.sep).split(os.path.sep)[-1]
+
+    with open(os.path.join(args.results, f"{family_name}-scale_free.plt")) as f:
+        txt = f.readlines()
+
+    plots[family_name] = txt
+
+degree_dist.join_plots(plots, args.results, "scale_free_agg.png")
+
+
+
+# hypotesis_test(groups_sizes, clust_values)
 analytical_comparison(df_results)
-solvers_comparison(df_results, df_solvers)
+
+if not args.only_vig_features:
+    print("entro")
+    solvers_comparison(df_results, df_solvers)

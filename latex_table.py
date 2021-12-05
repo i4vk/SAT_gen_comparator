@@ -34,10 +34,10 @@ def gen_table_VIG(df):
 
 def gen_table_powerlaw(df):
     header = '''\\begin{table}[]
-                \\begin{tabular}{|c|c|c|c|c|}
+                \\begin{tabular}{|c|c|c|c|}
                 \hline
-                \multirow{2}{*}{\\textbf{Generator}} & \multicolumn{4}{c|}{\\textbf{Powerlaw}} \\\\ \cline{2-5} 
-                & \\textbf{Variable $\\alpha$} & \\textbf{k\_min} & \\textbf{error} & \\textbf{k\_err} \\\\ \hline \n'''
+                \multirow{2}{*}{\\textbf{Generator}} & \multicolumn{3}{c|}{\\textbf{Powerlaw}} \\\\ \cline{2-4} 
+                & \\textbf{Variable $\\alpha$} & \\textbf{k\_min} & \\textbf{error} \\\\ \hline \n'''
 # papaya                     &            &                &                 &                   &        &       &        \\
 #                            &            &                &                 &                   &        &       &        \\
 #                            &            &                &                 &                   &        &       &       
@@ -49,17 +49,45 @@ def gen_table_powerlaw(df):
     for index, row in df.iterrows():
         if index == 0:
             latex_rows += f'''{row["Family name"].replace("_", " ")} & {round(row["powerlaw-alpha"], 2)} & {round(row["powerlaw-k_min"], 2)} 
-                            & {round(row["powerlaw-error"], 2)} & {round(row["powerlaw-k_err"], 2)} \\\\ \hline \hline \n'''
+                            & {round(row["powerlaw-error"], 2)} \\\\ \hline \hline \n'''
         else:
             latex_rows += f'''{row["Family name"].replace("_", " ")} & {round(row["powerlaw-alpha"], 2)} ({get_error(df.iloc[0]["powerlaw-alpha"], row["powerlaw-alpha"])} $\%$) 
                             & {round(row["powerlaw-k_min"], 2)} ({get_error(df.iloc[0]["powerlaw-k_min"], row["powerlaw-k_min"])} $\%$)
-                            & {round(row["powerlaw-error"], 2)} ({get_error(df.iloc[0]["powerlaw-error"], row["powerlaw-error"])} $\%$)
-                            & {round(row["powerlaw-k_err"], 2)} ({get_error(df.iloc[0]["powerlaw-k_err"], row["powerlaw-k_err"])} $\%$) \\\\ \hline \n'''
+                            & {round(row["powerlaw-error"], 2)} \\\\ \hline \n'''
 
             
 
     table = header + latex_rows + end
     return table
+
+# def gen_table_powerlaw(df):
+#     header = '''\\begin{table}[]
+#                 \\begin{tabular}{|c|c|c|c|c|}
+#                 \hline
+#                 \multirow{2}{*}{\\textbf{Generator}} & \multicolumn{4}{c|}{\\textbf{Powerlaw}} \\\\ \cline{2-5} 
+#                 & \\textbf{Variable $\\alpha$} & \\textbf{k\_min} & \\textbf{error} & \\textbf{k\_err} \\\\ \hline \n'''
+# # papaya                     &            &                &                 &                   &        &       &        \\
+# #                            &            &                &                 &                   &        &       &        \\
+# #                            &            &                &                 &                   &        &       &       
+    
+#     end = "\end{tabular} \end{table}"
+
+#     latex_rows = ""
+
+#     for index, row in df.iterrows():
+#         if index == 0:
+#             latex_rows += f'''{row["Family name"].replace("_", " ")} & {round(row["powerlaw-alpha"], 2)} & {round(row["powerlaw-k_min"], 2)} 
+#                             & {round(row["powerlaw-error"], 2)} & {round(row["powerlaw-k_err"], 2)} \\\\ \hline \hline \n'''
+#         else:
+#             latex_rows += f'''{row["Family name"].replace("_", " ")} & {round(row["powerlaw-alpha"], 2)} ({get_error(df.iloc[0]["powerlaw-alpha"], row["powerlaw-alpha"])} $\%$) 
+#                             & {round(row["powerlaw-k_min"], 2)} ({get_error(df.iloc[0]["powerlaw-k_min"], row["powerlaw-k_min"])} $\%$)
+#                             & {round(row["powerlaw-error"], 2)} ({get_error(df.iloc[0]["powerlaw-error"], row["powerlaw-error"])} $\%$)
+#                             & {round(row["powerlaw-k_err"], 2)} ({get_error(df.iloc[0]["powerlaw-k_err"], row["powerlaw-k_err"])} $\%$) \\\\ \hline \n'''
+
+            
+
+#     table = header + latex_rows + end
+#     return table
 
 def gen_table(df):
     table_vig = gen_table_VIG(df)
@@ -115,10 +143,10 @@ def gen_table(df):
 
 def solvers_table(df):
     header = '''\\begin{table}[]
-\\begin{tabular}{|c|c|c|c|c|c|}
+\\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 	\hline
-	\multirow{2}{*}{\\textbf{Generator}} & \multicolumn{5}{c|}{\\textbf{SAT Solvers}} \\\\ \cline{2-6} 
-	& \\textbf{Rank dist} & \\textbf{\%SAT} & \\textbf{\%UNSAT} & \\textbf{\%TIMEOUT} & \\textbf{CPU time} \\\\ \hline \n'''
+	\multirow{2}{*}{\\textbf{Generator}} & \multicolumn{5}{c|}{\\textbf{SAT Solvers}} \\\\ \cline{2-9} 
+	& \\textbf{Kendall SAT} & \\textbf{p-value (SAT)} & \\textbf{Kendall UNSAT} & \\textbf{p-value (UNSAT)} & \\textbf{\%SAT} & \\textbf{\%UNSAT} & \\textbf{\%TIMEOUT} & \\textbf{CPU time} \\\\ \hline \n'''
 
     end = "\end{tabular} \end{table}"
 
@@ -126,10 +154,14 @@ def solvers_table(df):
 
     for index, row in df.iterrows():
         if index == 0:
-            latex_rows += f'''{row["Family name"].replace("_", " ")} & - & {round(row["%_SAT (mean)"], 1)} 
+            latex_rows += f'''{row["Family name"].replace("_", " ")} & - & - & - & {round(row["%_SAT (mean)"], 1)} 
                             & {round(row["%_UNSAT (mean)"], 1)} & {round(row["%_TIMEOUT (mean)"], 1)} & {round(row["CPU time (mean)"], 2)} \\\\ \hline \hline \n'''
         else:
-            latex_rows += f'''{row["Family name"].replace("_", " ")} & {row["Rank dist"]}
+            latex_rows += f'''{row["Family name"].replace("_", " ")}
+                            & {round(row["Kendall Coeff. (SAT)"], 2)}
+                            & {round(row["p-value (SAT)"], 2)}
+                            & {round(row["Kendall Coeff. (UNSAT)"], 2)}
+                            & {round(row["p-value (UNSAT)"], 2)}
                             & {round(row["%_SAT (mean)"], 1)} 
                             & {round(row["%_UNSAT (mean)"], 1)} 
                             & {round(row["%_TIMEOUT (mean)"], 1)}

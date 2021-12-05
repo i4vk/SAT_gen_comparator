@@ -267,15 +267,15 @@ double mostlikely(vector <pair <int,int> > v, int maxxmin, char* fileout, char *
 			eps = eps.substr(0,strlen(nplot)-4);
 			eps.append(".png");
 		
-			fprintf(fplot,"set logscale xy\nset term pngcairo size 1024,720\nset size 0.7,0.7\nset yrange [0.00001:1.1]\nset output \"%s\"\n", eps.c_str());
+			fprintf(fplot,"set logscale xy\nset term pngcairo size 1024,720\nset size 1.0,1.0\nset key outside\nset yrange [0.00001:1.1]\nset output \"%s\"\n", eps.c_str());
 			if(var){
 				fprintf(fplot, "plot \"%s\" ti \"variables\" lt 1 pt 7",nint, y[0]);
 			    fprintf(fplot, ",%lf * x**%lf lt 1 ti \"{/Symbol a}=%0.2f\"", (double)y[bestinda]/ pow(bestxmina,bestalpha+1), bestalpha+1, -bestalpha);
-				fprintf(fplot, ",%lf*exp(-%lf*(x - %d)) lt 2 ti \"{/Symbol b}=%0.3f\"",  (double)y[bestindb], bestbeta, bestxminb, bestbeta);
+				// fprintf(fplot, ",%lf*exp(-%lf*(x - %d)) lt 2 ti \"{/Symbol b}=%0.3f\"",  (double)y[bestindb], bestbeta, bestxminb, bestbeta);
 			}else{
 				fprintf(fplot, "plot \"%s\" ti \"clauses\" lt 3 pt 7", nint, y[0]);
 				fprintf(fplot, ",%lf * x**%lf lt 3 ti \"{/Symbol a}=%0.2f\"", (double)y[bestinda]/ pow(bestxmina,bestalpha+1), bestalpha+1, -bestalpha); 
-				fprintf(fplot, ",%lf*exp(-%lf*(x - %d)) lt 4 ti \"{/Symbol b}=%0.3f\"",  (double)y[bestindb], bestbeta, bestxminb, bestbeta);
+				// fprintf(fplot, ",%lf*exp(-%lf*(x - %d)) lt 4 ti \"{/Symbol b}=%0.3f\"",  (double)y[bestindb], bestbeta, bestxminb, bestbeta);
 			}
 			fprintf(fplot, ",\"< echo '%f %f'\" ti \"\"\n", (double)x[bestinda], y[bestinda]);
 			fprintf(fplot, "quit\n");
