@@ -143,10 +143,10 @@ def gen_table(df):
 
 def solvers_table(df):
     header = '''\\begin{table}[]
-\\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
-	\hline
-	\multirow{2}{*}{\\textbf{Generator}} & \multicolumn{5}{c|}{\\textbf{SAT Solvers}} \\\\ \cline{2-9} 
-	& \\textbf{Kendall SAT} & \\textbf{p-value (SAT)} & \\textbf{Kendall UNSAT} & \\textbf{p-value (UNSAT)} & \\textbf{\%SAT} & \\textbf{\%UNSAT} & \\textbf{\%TIMEOUT} & \\textbf{CPU time} \\\\ \hline \n'''
+\\begin{tabular}{|c|cccccccc|}
+\hline
+\multirow{2}{*}{\\textbf{Generator}} & \multicolumn{8}{c|}{\\textbf{SAT Solvers}} \\ \cline{2-9} 
+ & \multicolumn{1}{c|}{\\textbf{\\begin{tabular}[c]{@{}c@{}}Kendall\\\\ SAT\end{tabular}}} & \multicolumn{1}{c|}{\\textbf{\\begin{tabular}[c]{@{}c@{}}p-value\\\\ SAT\end{tabular}}} & \multicolumn{1}{c|}{\\textbf{\\begin{tabular}[c]{@{}c@{}}Kendall\\\\ UNSAT\end{tabular}}} & \multicolumn{1}{c|}{\\textbf{\\begin{tabular}[c]{@{}c@{}}p-value\\\\ UNSAT\end{tabular}}} & \multicolumn{1}{c|}{\\textbf{\%SAT}} & \multicolumn{1}{c|}{\\textbf{\%UNSAT}} & \multicolumn{1}{c|}{\\textbf{\%TIMEOUT}} & \\textbf{\\begin{tabular}[c]{@{}c@{}}CPU\\\\ time\end{tabular}} \\\\ \hline'''
 
     end = "\end{tabular} \end{table}"
 
@@ -154,7 +154,7 @@ def solvers_table(df):
 
     for index, row in df.iterrows():
         if index == 0:
-            latex_rows += f'''{row["Family name"].replace("_", " ")} & - & - & - & {round(row["%_SAT (mean)"], 1)} 
+            latex_rows += f'''{row["Family name"].replace("_", " ")} & - & - & - & - & {round(row["%_SAT (mean)"], 1)} 
                             & {round(row["%_UNSAT (mean)"], 1)} & {round(row["%_TIMEOUT (mean)"], 1)} & {round(row["CPU time (mean)"], 2)} \\\\ \hline \hline \n'''
         else:
             latex_rows += f'''{row["Family name"].replace("_", " ")}
@@ -172,3 +172,33 @@ def solvers_table(df):
     table = header + latex_rows + end
     return table
 
+# def solvers_table(df):
+#     header = '''\\begin{table}[]
+# \\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+# 	\hline
+# 	\multirow{2}{*}{\\textbf{Generator}} & \multicolumn{5}{c|}{\\textbf{SAT Solvers}} \\\\ \cline{2-9} 
+# 	& \\textbf{Kendall SAT} & \\textbf{p-value (SAT)} & \\textbf{Kendall UNSAT} & \\textbf{p-value (UNSAT)} & \\textbf{\%SAT} & \\textbf{\%UNSAT} & \\textbf{\%TIMEOUT} & \\textbf{CPU time} \\\\ \hline \n'''
+
+#     end = "\end{tabular} \end{table}"
+
+#     latex_rows = ""
+
+#     for index, row in df.iterrows():
+#         if index == 0:
+#             latex_rows += f'''{row["Family name"].replace("_", " ")} & - & - & - & {round(row["%_SAT (mean)"], 1)} 
+#                             & {round(row["%_UNSAT (mean)"], 1)} & {round(row["%_TIMEOUT (mean)"], 1)} & {round(row["CPU time (mean)"], 2)} \\\\ \hline \hline \n'''
+#         else:
+#             latex_rows += f'''{row["Family name"].replace("_", " ")}
+#                             & {round(row["Kendall Coeff. (SAT)"], 2)}
+#                             & {round(row["p-value (SAT)"], 2)}
+#                             & {round(row["Kendall Coeff. (UNSAT)"], 2)}
+#                             & {round(row["p-value (UNSAT)"], 2)}
+#                             & {round(row["%_SAT (mean)"], 1)} 
+#                             & {round(row["%_UNSAT (mean)"], 1)} 
+#                             & {round(row["%_TIMEOUT (mean)"], 1)}
+#                             & {round(row["CPU time (mean)"], 2)} \\\\ \hline \n'''
+
+            
+
+#     table = header + latex_rows + end
+#     return table
