@@ -19,7 +19,7 @@ parser.add_argument("-r", "--results", help="Path to save results", type=str, re
 parser.add_argument("-o", "--orig", help="Path to original distribution", required=True)
 parser.add_argument("-s", "--generator_list", help="Path list to generator distributions", required=True, nargs="+")
 parser.add_argument("-l", "--light", help="Light execution (if you have low memory issues)", action="store_true", required=False)
-parser.add_argument("--only_vig_features", help="Exclude solvers from execution", action="store_true", required=False)
+parser.add_argument("--ignore_solvers", help="Exclude solvers from execution", action="store_true", required=False)
 
 args = parser.parse_args()
 
@@ -177,49 +177,53 @@ def extract_scale_free(path, df_result):
     return df_result
 
 def extract_solvers(path, df_per_formula):
-    solver_list = [solvers.Glucose(), solvers.MapleLCM(), solvers.MapleSAT(), solvers.Lingeling(), solvers.Cadical()]
-    time_limit = 1500
-    max_retries=3
-    
-    dfs = {}
-    count = 0
-    for form in os.listdir(path):
-        # if count > 1:
-        #     continue
-        print(f"Solving {form}: ")
-        results = []
-        for i, solv in enumerate(solver_list):
-            for rt in range(max_retries):
-                try:
-                    result, cpu_time = solv.solve(os.path.join(path, form), time_limit=time_limit)
-                except:
-                    e = sys.exc_info()[0]
-                    if rt <= max_retries - 1:
-                        time.sleep(0.5)
-                        continue
-                    else:
-                        raise e
-                break
-            # result, cpu_time = solv.solve(os.path.join(path, form), time_limit=time_limit)
-            print(f"\t{solv.name} --> {result} in {cpu_time}s")
-            if result != "INDET":
-                par2 = cpu_time
-            else:
-                par2 = 2.0*time_limit
-
-            results.append([form, solv.name, result, par2])
-
-        df_results = pd.DataFrame(results, columns=["Formula", "Solver", "Result", "CPU_time"])
-        dfs[form] = df_results
+    if not os.path.isfile(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv")):
+        solver_list = [solvers.Glucose(), solvers.MapleLCM(), solvers.MapleSAT(), solvers.Lingeling(), solvers.Cadical()]
+        time_limit = 1500
+        max_retries=3
         
-        print(df_results)
-        print("\n")
-        count += 1
+        dfs = {}
+        count = 0
+        for form in os.listdir(path):
+            # if count > 1:
+            #     continue
+            print(f"Solving {form}: ")
+            results = []
+            for i, solv in enumerate(solver_list):
+                for rt in range(max_retries):
+                    try:
+                        result, cpu_time = solv.solve(os.path.join(path, form), time_limit=time_limit)
+                    except:
+                        e = sys.exc_info()[0]
+                        if rt <= max_retries - 1:
+                            time.sleep(0.5)
+                            continue
+                        else:
+                            raise e
+                    break
+                # result, cpu_time = solv.solve(os.path.join(path, form), time_limit=time_limit)
+                print(f"\t{solv.name} --> {result} in {cpu_time}s")
+                if result != "INDET":
+                    par2 = cpu_time
+                else:
+                    par2 = 2.0*time_limit
+
+                results.append([form, solv.name, result, par2])
+
+            df_results = pd.DataFrame(results, columns=["Formula", "Solver", "Result", "CPU_time"])
+            dfs[form] = df_results
+            
+            print(df_results)
+            print("\n")
+            count += 1
 
 
-    merged_df = pd.concat(dfs.values(), axis=0)
-    print(merged_df)
-    merged_df.to_csv(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv"), index=False)
+        merged_df = pd.concat(dfs.values(), axis=0)
+        print(merged_df)
+        merged_df.to_csv(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv"), index=False)
+    else:
+        merged_df = pd.read_csv(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv"))
+    print(merged_df.dtypes)
     result_sat_unsat = merged_df["Result"]
     type_result = pd.CategoricalDtype(categories=["SAT", "UNSAT", "INDET"])
     merged_df.Result = merged_df.Result.astype(type_result)
@@ -422,12 +426,12 @@ for dir_path in [args.orig] + args.generator_list:
 
     df_extracted_values = extract_scale_free(dir_path, df_extracted_values)
 
-    if not args.only_vig_features:
+    if not args.ignore_solvers:
         df_solvers_i, df_per_formula = extract_solvers(dir_path, df_per_formula)
 
     df_results.append(df_extracted_values)
     df_per_formula_joined.append(df_per_formula)
-    if not args.only_vig_features:
+    if not args.ignore_solvers:
         df_solvers.append(df_solvers_i)
         print(df_solvers)
     groups_sizes[family_name] = groups_sizes_df
@@ -450,6 +454,6 @@ degree_dist.join_plots(plots, args.results, "scale_free_agg.png")
 # hypotesis_test(groups_sizes, clust_values)
 analytical_comparison(df_results)
 
-if not args.only_vig_features:
+if not args.ignore_solvers:
     print("entro")
     solvers_comparison(df_results, df_solvers)

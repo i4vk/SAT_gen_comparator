@@ -78,7 +78,10 @@ def join_plots(plots, results_path, filename):
 
     max_retries = 5
     for f in os.listdir(results_path):
-        if f[-4:] == ".int" or f[-4:] == ".plt":
+        # if f[-4:] == ".int" or f[-4:] == ".plt":
+        if f[-4:] == ".plt":
+            if f == "scale_free_agg.plt":
+                continue
             for rt in range(max_retries):
                 try:
                     os.remove(os.path.join(results_path,f))
