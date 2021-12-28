@@ -152,36 +152,6 @@ def create_VIG(path):
 
     return VIG
 
-def create_VIG_modified(path):
-    print(f"Reading {path}")
-    cnf = open(path)
-    content = cnf.readlines()
-    cnf.close()
-
-    while content[0].split()[0] == 'c':
-        content = content[1:]
-    while len(content[-1].split()) <= 1:
-        content = content[:-1]
-
-
-    parameters = content[0].split()
-    formula = content[1:]
-    formula = to_int_matrix(formula)
-    (formula, num_clauses) = remove_duplicate(formula)
-
-    num_vars = int(parameters[2])
-
-    assert (get_vacuous(formula) == 0)
-    assert(num_vars != 0)
-    assert(num_clauses == len(formula))
-
-    VIG = nx.Graph()
-    VIG.add_nodes_from(range(num_vars+1)[1:])
-
-    preprocess_VIG(formula, VIG) # Build a VIG
-
-    return VIG
-
 
 
 if __name__=="__main__":

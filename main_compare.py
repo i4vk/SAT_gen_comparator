@@ -81,7 +81,6 @@ def extract_mod(VIGs, family_name, df_result, df_per_formula):
     del mod_df
 
     group_sizes_df = pd.DataFrame(np.array(group_sizes).reshape((-1,1)), columns=["group_sizes"])
-    # group_df.to_csv(os.path.join(args.results, "group_sizes_agg.csv"), index=False)
 
     mod_values = np.array(list(mods.values()))
     mean_mod = np.mean(mod_values)
@@ -148,7 +147,6 @@ def extract_clust(VIGs, family_name, df_result, df_per_formula):
     del clust_df
 
     clust_values_df = pd.DataFrame(clust_values_all.reshape((-1,1)), columns=["clust_values"])
-    # clust_values_df.to_csv(os.path.join(args.results, "clust_values_agg.csv"), index=False)
 
     df_result["clust_mean"] = [mean_clust]
     df_result["clust_std"] = [std_clust]
@@ -185,8 +183,6 @@ def extract_solvers(path, df_per_formula):
         dfs = {}
         count = 0
         for form in os.listdir(path):
-            # if count > 1:
-            #     continue
             print(f"Solving {form}: ")
             results = []
             for i, solv in enumerate(solver_list):
@@ -201,7 +197,7 @@ def extract_solvers(path, df_per_formula):
                         else:
                             raise e
                     break
-                # result, cpu_time = solv.solve(os.path.join(path, form), time_limit=time_limit)
+                
                 print(f"\t{solv.name} --> {result} in {cpu_time}s")
                 if result != "INDET":
                     par2 = cpu_time
@@ -320,7 +316,6 @@ def solvers_comparison(df_results, df_solvers):
     mean_cpu_time = [np.mean(np.array(df_solvers_orig["CPU_time"]))]
 
     for dist in range(1,len(df_solvers)):
-    # for dist in args.paths:
         df_solvers_gen = df_solvers[dist]
         df_solvers_gen["ranking"] = df_solvers_gen["CPU_time"].rank(method="first")
         df_solvers_gen["ranking_SAT"] = df_solvers_gen["CPU_time_SAT"].rank(method="first")
@@ -343,7 +338,7 @@ def solvers_comparison(df_results, df_solvers):
         print(df_solvers_orig["ranking_SAT"])
         print(df_solvers_gen["ranking_SAT"])
 
-        # kendall_results.append(kendalltau(df_solvers_orig["ranking"], df_solvers_gen["ranking"]).correlation)
+
         kendall_results_sat.append(kendall_sat.correlation)
         kendall_sat_pvalue.append(kendall_sat.pvalue)
         kendall_results_unsat.append(kendall_unsat.correlation)
@@ -351,12 +346,6 @@ def solvers_comparison(df_results, df_solvers):
 
         print(kendall_sat_pvalue)
         print(kendall_unsat_pvalue)
-
-
-    # solver_comp = pd.DataFrame({"Family name":list(analytical_df["Family name"]), "Kendall Coefficient":kendall_results,
-    #                             "Kendall Coefficient (SAT)":kendall_results_sat, "Kendall Coefficient (UNSAT)":kendall_results_unsat,
-    #                             "%_SAT (mean)": mean_sat, "%_UNSAT (mean)": mean_unsat, "%_TIMEOUT (mean)": mean_indet,
-    #                             "CPU time (mean)":mean_cpu_time})
 
     solver_comp = pd.DataFrame({"Family name":list(analytical_df["Family name"]),
                                 "Kendall Coeff. (SAT)":kendall_results_sat, "p-value (SAT)":kendall_sat_pvalue,
@@ -367,15 +356,6 @@ def solvers_comparison(df_results, df_solvers):
     print(solver_comp)
 
     solver_comp.to_excel(os.path.join(args.results, "solvers_table.xlsx"), index=False)
-
-    # def highlight_min(s):
-        
-    #     is_min = s == s.min()
-        
-    #     return ['font-weight: bold' if cell else '' 
-    #             for cell in is_min]
-    
-    # solver_comp.style.hide_index().apply(highlight_min, subset=["Rank dist"]).to_html("prueba.html")
 
     table = latex_table.solvers_table(solver_comp)
 
@@ -401,16 +381,6 @@ for dir_path in [args.orig] + args.generator_list:
         VIGs = {path: modularity.sat_to_VIG(os.path.join(dir_path, path)) for path in os.listdir(dir_path) if path[-4:] == ".cnf"}
     else:
         VIGs = [os.path.join(dir_path, path) for path in os.listdir(dir_path) if path[-4:] == ".cnf"]
-
-    # count = 0
-    # VIGs = {}
-    # for path in os.listdir(dir_path):
-    #     if path[-4:] == ".cnf":
-    #         VIGs[path] = modularity.sat_to_VIG_mod(os.path.join(dir_path, path))
-    #         count += 1
-
-    #         if count > 1:
-    #             break
 
     df_extracted_values = pd.DataFrame([family_name], columns = ["Family name"])
     df_per_formula = pd.DataFrame([path for path in os.listdir(dir_path) if path[-4:] == ".cnf"], columns=["Formula"])
@@ -450,10 +420,7 @@ for dir_path in [args.orig] + args.generator_list:
 degree_dist.join_plots(plots, args.results, "scale_free_agg.png")
 
 
-
-# hypotesis_test(groups_sizes, clust_values)
 analytical_comparison(df_results)
 
 if not args.ignore_solvers:
-    print("entro")
     solvers_comparison(df_results, df_solvers)
