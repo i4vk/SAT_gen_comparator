@@ -1,0 +1,13 @@
+name: SAT_gen_comparator
+channels:
+  - defaults
+dependencies:
+  - scikit-learn
+  - pandas
+  - python=3.8
+  - jinja2
+  - openpyxl
+  - pylint
+  - networkx
+  - python-louvain
+  - matplotlib
