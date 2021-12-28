@@ -177,7 +177,7 @@ def extract_scale_free(path, df_result):
 def extract_solvers(path, df_per_formula):
     if not os.path.isfile(os.path.join(args.results, f"solvers_per_formula_{path.strip(os.path.sep).split(os.path.sep)[-1]}.csv")):
         solver_list = [solvers.Glucose(), solvers.MapleLCM(), solvers.MapleSAT(), solvers.Lingeling(), solvers.Cadical()]
-        time_limit = 1500
+        time_limit = 5000
         max_retries=3
         
         dfs = {}
