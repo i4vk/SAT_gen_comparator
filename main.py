@@ -2,7 +2,7 @@ import argparse
 
 from scipy.stats.stats import kendalltau
 import vig_features
-import degree_dist
+import scale_free
 import solvers
 import os
 import numpy as np
@@ -165,7 +165,7 @@ def extract_clust(VIGs, family_name, df_result, df_per_formula):
     return df_result, df_per_formula, clust_values_df
 
 def extract_scale_free(path, df_result):
-    alpha, kmin, error, k_err = degree_dist.degree_dist(path, args.results)
+    alpha, kmin, error, k_err = scale_free.degree_dist(path, args.results)
     df_result["powerlaw-alpha"] = [alpha]
     df_result["powerlaw-k_min"] = [kmin]
     df_result["powerlaw-error"] = [error]
@@ -416,7 +416,7 @@ for dir_path in [args.orig] + args.generator_list:
 
     plots[family_name] = txt
 
-degree_dist.join_plots(plots, args.results, "scale_free_agg.png")
+scale_free.join_plots(plots, args.results, "scale_free_agg.png")
 
 
 analytical_comparison(df_results)

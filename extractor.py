@@ -1,7 +1,7 @@
 import argparse
 
 import vig_features
-import degree_dist
+import scale_free
 import solvers
 import clustering
 import os
@@ -218,7 +218,7 @@ if args.all or args.clus or args.mod:
 
 
 if args.scale_free or args.all:
-    alpha, kmin, error, k_err = degree_dist.degree_dist(args.path, args.results)
+    alpha, kmin, error, k_err = scale_free.degree_dist(args.path, args.results)
     df_extracted_values["powerlaw-alpha"] = [alpha]
     df_extracted_values["powerlaw-k_min"] = [kmin]
     df_extracted_values["powerlaw-error"] = [error]
