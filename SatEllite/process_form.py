@@ -1,10 +1,12 @@
+# This script automates the preprocessing of a set of formulas contained in the same directory, using SatEllite tool.
+
 import argparse
 import os
 import subprocess
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--input", required=True)
-parser.add_argument("-o", "--output", required=True)
+parser.add_argument("-i", "--input", help="Path to input formulas directory", required=True)
+parser.add_argument("-o", "--output", help="Path to save preprocessed formulas", required=True)
 
 args = parser.parse_args()
 
