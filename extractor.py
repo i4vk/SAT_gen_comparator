@@ -1,6 +1,6 @@
 import argparse
 
-import modularity
+import vig_features
 import degree_dist
 import solvers
 import clustering
@@ -69,7 +69,7 @@ if args.mod or args.clus or args.all:
         print(f"Working on formula \'{formula_name}\'")
         import time
         inicio = time.time()
-        VIG = modularity.sat_to_VIG_mod(args.path)
+        VIG = vig_features.sat_to_VIG_mod(args.path)
         fin = time.time()
         time_orig = fin-inicio
 
@@ -88,7 +88,7 @@ if args.mod or args.clus or args.all:
         # exit()
     else:
         print(f"Working on family \'{family_name}\'")
-        VIGs = {path: modularity.sat_to_VIG(os.path.join(args.path, path)) for path in os.listdir(args.path) if path[-4:] == ".cnf"}
+        VIGs = {path: vig_features.sat_to_VIG(os.path.join(args.path, path)) for path in os.listdir(args.path) if path[-4:] == ".cnf"}
 
 
 if args.mod or args.all:
@@ -96,7 +96,7 @@ if args.mod or args.all:
         mods = {}
         num_comm = {}
         for i, form in enumerate(VIGs.keys()):
-            mod_VIG, num_parts, gs, fig = modularity.get_modularity(VIGs[form])
+            mod_VIG, num_parts, gs, fig = vig_features.get_modularity(VIGs[form])
             mods[form] = mod_VIG
             num_comm[form] = num_parts
             # fig[1].set_title(form)
@@ -143,7 +143,7 @@ if args.mod or args.all:
         plt.savefig(os.path.join(args.results, f"{family_name}-comm.png"))
         plt.close() 
     else:
-        mod_VIG, num_parts, gs, fig = modularity.get_modularity(VIG)
+        mod_VIG, num_parts, gs, fig = vig_features.get_modularity(VIG)
 
         plt.close(fig[0])
         
